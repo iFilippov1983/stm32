@@ -64,8 +64,6 @@ void LightLedIfButtonPressed(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
-
 /* USER CODE END 0 */
 
 /**
@@ -98,57 +96,20 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
 
-  MATH_OP math_op = ADD;
-  int result = 0;
-  int isExit = 0;
-
-  int blinkPeriod = 300;
-  int operationsPeriod = 1000;
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  switch (math_op)
+	  if(!(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET))
 	  {
-	  case NONE:
-		  LightLedIfButtonPressed();
-		  break;
-
-	  case ADD:
-		  result = add(30, 70);
-		  math_op = SUB;
-		  BlinkLed(blinkPeriod, 1);
-		  HAL_Delay(operationsPeriod);
-		  break;
-
-	  case SUB:
-		  result = sub(4000, 260);
-		  math_op = MUL;
-		  BlinkLed(blinkPeriod, 2);
-		  HAL_Delay(operationsPeriod);
-		  break;
-
-	  case MUL:
-		  result = mul(81, 9);
-		  math_op = DIV;
-		  BlinkLed(blinkPeriod, 3);
-		  HAL_Delay(operationsPeriod);
-		  break;
-
-	  case DIV:
-		  result = div(10000, 25);
-		  math_op = NONE;
-		  BlinkLed(blinkPeriod, 4);
-		  HAL_Delay(operationsPeriod);
-		  break;
+		  HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_SET);
 	  }
-
-	  if (isExit)
+	  else
 	  {
-		  break;
+		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_RESET);
 	  }
 
     /* USER CODE END WHILE */
@@ -214,6 +175,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -232,6 +196,23 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : B1_STATE_Pin */
+  GPIO_InitStruct.Pin = B1_STATE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(B1_STATE_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
@@ -253,6 +234,15 @@ void LightLedIfButtonPressed(void)
 	uint8_t button_state = !HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
 
 	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, button_state);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == GPIO_PIN_9)
+	{
+		//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+		BlinkLed(500, 1);
+	}
 }
 
 /* USER CODE END 4 */
