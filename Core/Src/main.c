@@ -34,6 +34,11 @@ typedef enum
 	NONE = 0u, ADD, SUB, MUL, DIV
 } MATH_OP;
 
+typedef enum
+{
+	FR_0 = 0u, FR_200 = 200u, FR_1000 = 1000u, FR_2000 = 2000u
+} LED_FR;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -57,12 +62,17 @@ static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
 
 void BlinkLed(int blinkPeriod, int bliksAmount);
+void BlinkLed_EXTI(int blinkPeriod);
 void LightLedIfButtonPressed(void);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+LED_FR _ledFrequrcy = FR_0;
+int _ledStatus = 0;
+int _pushesCounter = 0;
 
 /* USER CODE END 0 */
 
@@ -102,15 +112,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(!(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET))
-	  {
-		  HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_SET);
-	  }
-	  else
-	  {
-		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_RESET);
-	  }
+	  BlinkLed_EXTI(200);
 
     /* USER CODE END WHILE */
 
@@ -207,7 +209,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : PB9 */
   GPIO_InitStruct.Pin = GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
@@ -229,6 +231,29 @@ void BlinkLed(int blinkPeriod, int bliksAmount)
 	}
 }
 
+void BlinkLed_EXTI(int blinkPeriod)
+{
+	if (!(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET))
+	{
+		if (_ledStatus == GPIO_PIN_RESET)
+		{
+			_ledStatus = GPIO_PIN_SET;
+			HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_SET);
+			HAL_Delay(blinkPeriod);
+			HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+			HAL_Delay(blinkPeriod);
+			_ledStatus = GPIO_PIN_RESET;
+		}
+	}
+	else
+	{
+		_ledStatus = GPIO_PIN_RESET;
+		HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, _ledStatus);
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, _ledStatus);
+	}
+}
+
 void LightLedIfButtonPressed(void)
 {
 	uint8_t button_state = !HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
@@ -240,8 +265,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_9)
 	{
-		//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		BlinkLed(500, 1);
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 	}
 }
 
