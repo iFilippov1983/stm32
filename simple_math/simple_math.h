@@ -1,3 +1,8 @@
+typedef enum
+{
+	NONE = 0u, ADD, SUB, MUL, DIV
+} MATH_OP;
+
 #ifdef SIMPLE_MATH_H
 
 int add(int a, int b);
