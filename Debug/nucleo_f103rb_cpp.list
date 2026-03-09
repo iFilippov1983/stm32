@@ -258,17 +258,17 @@ static void MX_TIM3_Init(void)
  8000216:	4b22      	ldr	r3, [pc, #136]	; (80002a0 <MX_TIM3_Init+0xac>)
  8000218:	4a22      	ldr	r2, [pc, #136]	; (80002a4 <MX_TIM3_Init+0xb0>)
  800021a:	601a      	str	r2, [r3, #0]
-  htim3.Init.Prescaler = 63999;
+  htim3.Init.Prescaler = 31;
  800021c:	4b20      	ldr	r3, [pc, #128]	; (80002a0 <MX_TIM3_Init+0xac>)
- 800021e:	f64f 12ff 	movw	r2, #63999	; 0xf9ff
- 8000222:	605a      	str	r2, [r3, #4]
+ 800021e:	221f      	movs	r2, #31
+ 8000220:	605a      	str	r2, [r3, #4]
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
- 8000224:	4b1e      	ldr	r3, [pc, #120]	; (80002a0 <MX_TIM3_Init+0xac>)
- 8000226:	2200      	movs	r2, #0
- 8000228:	609a      	str	r2, [r3, #8]
-  htim3.Init.Period = 99;
- 800022a:	4b1d      	ldr	r3, [pc, #116]	; (80002a0 <MX_TIM3_Init+0xac>)
- 800022c:	2263      	movs	r2, #99	; 0x63
+ 8000222:	4b1f      	ldr	r3, [pc, #124]	; (80002a0 <MX_TIM3_Init+0xac>)
+ 8000224:	2200      	movs	r2, #0
+ 8000226:	609a      	str	r2, [r3, #8]
+  htim3.Init.Period = 999;
+ 8000228:	4b1d      	ldr	r3, [pc, #116]	; (80002a0 <MX_TIM3_Init+0xac>)
+ 800022a:	f240 32e7 	movw	r2, #999	; 0x3e7
  800022e:	60da      	str	r2, [r3, #12]
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
  8000230:	4b1b      	ldr	r3, [pc, #108]	; (80002a0 <MX_TIM3_Init+0xac>)
@@ -309,8 +309,8 @@ static void MX_TIM3_Init(void)
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
  800026a:	2360      	movs	r3, #96	; 0x60
  800026c:	607b      	str	r3, [r7, #4]
-  sConfigOC.Pulse = 79;
- 800026e:	234f      	movs	r3, #79	; 0x4f
+  sConfigOC.Pulse = 199;
+ 800026e:	23c7      	movs	r3, #199	; 0xc7
  8000270:	60bb      	str	r3, [r7, #8]
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
  8000272:	2300      	movs	r3, #0
