@@ -6,6 +6,7 @@ uint32_t blinkHalfPeriod = 0;
 int ledOn = 0;
 int pushesCounter = 0;
 int ledMsCounter = 0;
+BUTTON_STATE buttonState = RELEASED;
 
 /*lab_1, lab_2 -------------------------------------------------*/
 
@@ -134,6 +135,47 @@ void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin)
 }
 
 /*lab_4 -------------------------------------------------*/
+
+GPIO_PinState IsButtonPressed()
+{
+	return !HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+}
+
+void ReconfigTim(TIM_HandleTypeDef *htim, uint32_t channel, uint16_t ccrValue)
+{
+	HAL_TIM_PWM_Stop_IT(htim, channel);
+
+	TIM_OC_InitTypeDef sConfigOC = {0};
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+	sConfigOC.Pulse = ccrValue;
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+
+	HAL_TIM_PWM_ConfigChannel(htim, &sConfigOC, channel);
+
+	HAL_TIM_PWM_Start_IT(htim, channel);
+}
+
+void ReconfigTim_IfButtonPressed(TIM_HandleTypeDef *htim, uint32_t channel, uint16_t ccrValuePr, uint16_t ccrValueRe)
+{
+	switch(buttonState)
+		  {
+		  case RELEASED:
+			  if(IsButtonPressed())
+			  {
+				  ReconfigTim(htim, channel, ccrValuePr);
+				  buttonState = PRESSED;
+			  }
+			  break;
+		  case PRESSED:
+			  if(!IsButtonPressed())
+			  {
+				  ReconfigTim(htim, channel, ccrValueRe);
+			  	  buttonState = RELEASED;
+			  }
+			  break;
+		  }
+}
 
 void LedToggle()
 {
