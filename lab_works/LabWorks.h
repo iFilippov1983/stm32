@@ -18,4 +18,9 @@ void LightLedIfButtonPressed_EXTI();
 void HandleExtiCallback_Simple(uint16_t GPIO_Pin);
 void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin);
 
+void LedToggle();
+void DelayMs(uint16_t ms, TIM_HandleTypeDef *htim2);
+int DelayWithCounter_Check(int ms, TIM_HandleTypeDef *htim2);
+void DelayWithCounter_Reset();
+
 #endif /* LABWORKS_H_ */

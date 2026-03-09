@@ -1,10 +1,12 @@
 #include "LabWorks.h"
 
-LED_FR _ledFreq = FR_0;
-uint32_t _blinkStartTime = 0;
-uint32_t _blinkHalfPeriod = 0;
-int _ledOn = 0;
-int _pushesCounter = 0;
+LED_FR ledFreq = FR_0;
+uint32_t blinkStartTime = 0;
+uint32_t blinkHalfPeriod = 0;
+int ledOn = 0;
+int pushesCounter = 0;
+int ledMsCounter = 0;
+
 
 void BlinkLed(int blinkPeriod, int bliksAmount)
 {
@@ -21,22 +23,22 @@ void BlinkLed_EXTI_WithDelay(int blinkPeriod)
 {
 	if (!(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET))
 	{
-		if (_ledOn == GPIO_PIN_RESET)
+		if (ledOn == GPIO_PIN_RESET)
 		{
-			_ledOn = GPIO_PIN_SET;
+			ledOn = GPIO_PIN_SET;
 			HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_SET);
 			HAL_Delay(blinkPeriod);
 			HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			HAL_Delay(blinkPeriod);
-			_ledOn = GPIO_PIN_RESET;
+			ledOn = GPIO_PIN_RESET;
 		}
 	}
 	else
 	{
-		_ledOn = GPIO_PIN_RESET;
-		HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, _ledOn);
-		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, _ledOn);
+		ledOn = GPIO_PIN_RESET;
+		HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, ledOn);
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, ledOn);
 	}
 }
 
@@ -46,14 +48,14 @@ void BlinkLed_EXTI_WithTick()
 	{
 		HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_SET);
 
-		if (_ledFreq != FR_0)
+		if (ledFreq != FR_0)
 		{
 			uint32_t currentTick = HAL_GetTick();
-			if (currentTick - _blinkStartTime >= _blinkHalfPeriod)
+			if (currentTick - blinkStartTime >= blinkHalfPeriod)
 			{
-				_blinkStartTime = currentTick;
-				_ledOn = !_ledOn;
-				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, _ledOn ? GPIO_PIN_SET : GPIO_PIN_RESET);
+				blinkStartTime = currentTick;
+				ledOn = !ledOn;
+				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, ledOn ? GPIO_PIN_SET : GPIO_PIN_RESET);
 			}
 		}
 	}
@@ -96,34 +98,65 @@ void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin)
 {
 	if (GPIO_Pin == GPIO_PIN_9)
 	{
-		_pushesCounter++;
-	    switch (_pushesCounter % 4)
+		pushesCounter++;
+	    switch (pushesCounter % 4)
 	    {
 	      case 1:
-	    	  _ledFreq = FR_200;
-	    	  _blinkHalfPeriod = 100;
+	    	  ledFreq = FR_200;
+	    	  blinkHalfPeriod = 100;
 	    	  break;  // 200мс
 
 	      case 2:
-	    	  _ledFreq = FR_1000;
-	    	  _blinkHalfPeriod = 500;
+	    	  ledFreq = FR_1000;
+	    	  blinkHalfPeriod = 500;
 	    	  break; // 1000мс
 
 	      case 3:
-	    	  _ledFreq = FR_2000;
-	    	  _blinkHalfPeriod = 1000;
+	    	  ledFreq = FR_2000;
+	    	  blinkHalfPeriod = 1000;
 	    	  break; // 2000мс
 
 	      default:
-	    	  _ledFreq = FR_0;
+	    	  ledFreq = FR_0;
 	    	  HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_RESET);
 	    	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 	    	  break;
 	    }
 
-	    if (_ledFreq != FR_0) {
-	      _blinkStartTime = HAL_GetTick();
-	      _ledOn = 0;
+	    if (ledFreq != FR_0) {
+	      blinkStartTime = HAL_GetTick();
+	      ledOn = 0;
 	    }
 	}
+}
+
+void LedToggle()
+{
+	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+}
+
+/*Bad delay implementation*/
+void DelayMs(uint16_t ms, TIM_HandleTypeDef *htim2)
+{
+	for(uint16_t i = 0; i < ms; i++)
+	{
+		while(__HAL_TIM_GET_FLAG(htim2, TIM_FLAG_UPDATE) == RESET);
+
+		__HAL_TIM_CLEAR_FLAG(htim2, TIM_FLAG_UPDATE);
+	}
+}
+
+int DelayWithCounter_Check(int ms, TIM_HandleTypeDef *htim2)
+{
+	if(__HAL_TIM_GET_FLAG(htim2, TIM_FLAG_UPDATE))
+	{
+		ledMsCounter++;
+		__HAL_TIM_CLEAR_FLAG(htim2, TIM_FLAG_UPDATE);
+	}
+	return ledMsCounter == ms;
+}
+
+void DelayWithCounter_Reset()
+{
+	ledMsCounter = 0;
 }
