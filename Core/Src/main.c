@@ -61,7 +61,16 @@ static void MX_TIM2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
 
+	/*
+	if(htim->Instance == TIM2)
+	{
+		LedToggle();
+	}
+	*/
+}
 
 /* USER CODE END 0 */
 
@@ -96,8 +105,7 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-
-  HAL_TIM_Base_Start(&htim2);
+  HAL_TIM_Base_Start_IT(&htim2);
 
   /* USER CODE END 2 */
 
@@ -105,12 +113,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(DelayWithCounter_Check(500, &htim2))
-	  {
-		  LedToggle();
-		  DelayWithCounter_Reset();
-	  }
-
+	 BlinkLed_TIM_DelayWithCounter(1000, &htim2);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -19,8 +19,10 @@ void HandleExtiCallback_Simple(uint16_t GPIO_Pin);
 void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin);
 
 void LedToggle();
-void DelayMs(uint16_t ms, TIM_HandleTypeDef *htim2);
-int DelayWithCounter_Check(int ms, TIM_HandleTypeDef *htim2);
+void DelayMs(uint16_t ms, TIM_HandleTypeDef *htim);
+int DelayWithCounter_Check(int ms, TIM_HandleTypeDef *htim);
 void DelayWithCounter_Reset();
+void BlinkLed_TIM_DelayWithCounter(int ms, TIM_HandleTypeDef *htim);
+void BlinkLed_TIM_DelayWithCounter(int ms, TIM_HandleTypeDef *htim);
 
 #endif /* LABWORKS_H_ */

@@ -7,6 +7,7 @@ int ledOn = 0;
 int pushesCounter = 0;
 int ledMsCounter = 0;
 
+/*lab_1, lab_2 -------------------------------------------------*/
 
 void BlinkLed(int blinkPeriod, int bliksAmount)
 {
@@ -86,6 +87,8 @@ void LightLedIfButtonPressed_EXTI()
 	}
 }
 
+/*lab_4 -------------------------------------------------*/
+
 void HandleExtiCallback_Simple(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_9)
@@ -130,28 +133,30 @@ void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin)
 	}
 }
 
+/*lab_4 -------------------------------------------------*/
+
 void LedToggle()
 {
 	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 }
 
 /*Bad delay implementation*/
-void DelayMs(uint16_t ms, TIM_HandleTypeDef *htim2)
+void DelayMs(uint16_t ms, TIM_HandleTypeDef *htim)
 {
 	for(uint16_t i = 0; i < ms; i++)
 	{
-		while(__HAL_TIM_GET_FLAG(htim2, TIM_FLAG_UPDATE) == RESET);
+		while(__HAL_TIM_GET_FLAG(htim, TIM_FLAG_UPDATE) == RESET);
 
-		__HAL_TIM_CLEAR_FLAG(htim2, TIM_FLAG_UPDATE);
+		__HAL_TIM_CLEAR_FLAG(htim, TIM_FLAG_UPDATE);
 	}
 }
 
-int DelayWithCounter_Check(int ms, TIM_HandleTypeDef *htim2)
+int DelayWithCounter_Check(int ms, TIM_HandleTypeDef *htim)
 {
-	if(__HAL_TIM_GET_FLAG(htim2, TIM_FLAG_UPDATE))
+	if(__HAL_TIM_GET_FLAG(htim, TIM_FLAG_UPDATE))
 	{
 		ledMsCounter++;
-		__HAL_TIM_CLEAR_FLAG(htim2, TIM_FLAG_UPDATE);
+		__HAL_TIM_CLEAR_FLAG(htim, TIM_FLAG_UPDATE);
 	}
 	return ledMsCounter == ms;
 }
@@ -159,4 +164,14 @@ int DelayWithCounter_Check(int ms, TIM_HandleTypeDef *htim2)
 void DelayWithCounter_Reset()
 {
 	ledMsCounter = 0;
+}
+
+//lab_4 - part 1
+void BlinkLed_TIM_DelayWithCounter(int ms, TIM_HandleTypeDef *htim)
+{
+	if(DelayWithCounter_Check(ms, htim))
+	{
+		LedToggle();
+		DelayWithCounter_Reset();
+	}
 }
