@@ -1,4 +1,4 @@
-#ifdef SIMPLE_MATH_H
+#ifndef SIMPLE_MATH_H
 
 int add(int a, int b);
 int sub(int a, int b);
