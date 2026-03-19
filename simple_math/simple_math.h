@@ -3,8 +3,8 @@ typedef enum
 	NONE = 0u, ADD, SUB, MUL, DIV
 } MATH_OP;
 
-#ifdef SIMPLE_MATH_H
 
+#ifndef SIMPLE_MATH_H
 int add(int a, int b);
 int sub(int a, int b);
 int mul(int a, int b);
