@@ -121,9 +121,40 @@ void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin)
 	    	  break;
 	    }
 
-	    if (_ledFreq != FR_0) {
+	    if (_ledFreq != FR_0)
+	    {
 	      _blinkStartTime = HAL_GetTick();
 	      _ledOn = 0;
 	    }
+	}
+}
+
+void HandleExtiCallback_CheckPin(uint16_t GPIO_Pin)
+{
+	switch(GPIO_Pin)
+	{
+	case GPIO_PIN_9:
+		_ledFreq = FR_200;
+		_blinkHalfPeriod = 100;
+		break;
+	case GPIO_PIN_7:
+		_ledFreq = FR_1000;
+		_blinkHalfPeriod = 500;
+		break;
+	case GPIO_PIN_6:
+		_ledFreq = FR_2000;
+		_blinkHalfPeriod = 1000;
+		break;
+	default:
+		_ledFreq = FR_0;
+		HAL_GPIO_WritePin(B1_STATE_GPIO_Port, B1_STATE_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+		break;
+	}
+
+	if (_ledFreq != FR_0)
+	{
+		_blinkStartTime = HAL_GetTick();
+		_ledOn = 0;
 	}
 }

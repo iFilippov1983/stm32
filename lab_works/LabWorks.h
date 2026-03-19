@@ -17,5 +17,6 @@ void LightLedIfButtonPressed_EXTI();
 
 void HandleExtiCallback_Simple(uint16_t GPIO_Pin);
 void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin);
+void HandleExtiCallback_CheckPin(uint16_t GPIO_Pin);
 
 #endif /* LABWORKS_H_ */
