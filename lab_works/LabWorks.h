@@ -22,7 +22,7 @@ void LightLedIfButtonPressed_EXTI();
 
 void HandleExtiCallback_Simple(uint16_t GPIO_Pin);
 void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin);
-
+/*
 GPIO_PinState IsButtonPressed();
 void ReconfigTim(TIM_HandleTypeDef *htim, uint32_t channel, uint16_t ccrValue);
 void ReconfigTim_IfButtonPressed(TIM_HandleTypeDef *htim, uint32_t channel, uint16_t ccrValuePr, uint16_t ccrValueRe);
@@ -33,5 +33,5 @@ int DelayWithCounter_Check(int ms, TIM_HandleTypeDef *htim);
 void DelayWithCounter_Reset();
 void BlinkLed_TIM_DelayWithCounter(int ms, TIM_HandleTypeDef *htim);
 void BlinkLed_TIM_DelayWithCounter(int ms, TIM_HandleTypeDef *htim);
-
+*/
 #endif /* LABWORKS_H_ */

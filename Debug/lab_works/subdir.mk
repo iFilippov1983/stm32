@@ -5,12 +5,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../lab_works/AdDaFunctions.c \
 ../lab_works/LabWorks.c 
 
 C_DEPS += \
+./lab_works/AdDaFunctions.d \
 ./lab_works/LabWorks.d 
 
 OBJS += \
+./lab_works/AdDaFunctions.o \
 ./lab_works/LabWorks.o 
 
 
@@ -21,7 +24,7 @@ lab_works/%.o lab_works/%.su: ../lab_works/%.c lab_works/subdir.mk
 clean: clean-lab_works
 
 clean-lab_works:
-	-$(RM) ./lab_works/LabWorks.d ./lab_works/LabWorks.o ./lab_works/LabWorks.su
+	-$(RM) ./lab_works/AdDaFunctions.d ./lab_works/AdDaFunctions.o ./lab_works/AdDaFunctions.su ./lab_works/LabWorks.d ./lab_works/LabWorks.o ./lab_works/LabWorks.su
 
 .PHONY: clean-lab_works
 

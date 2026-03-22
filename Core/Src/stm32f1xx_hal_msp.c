@@ -81,67 +81,61 @@ void HAL_MspInit(void)
 }
 
 /**
-* @brief TIM_Base MSP Initialization
+* @brief ADC MSP Initialization
 * This function configures the hardware resources used in this example
-* @param htim_base: TIM_Base handle pointer
+* @param hadc: ADC handle pointer
 * @retval None
 */
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
+void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(htim_base->Instance==TIM3)
+  if(hadc->Instance==ADC1)
   {
-  /* USER CODE BEGIN TIM3_MspInit 0 */
+  /* USER CODE BEGIN ADC1_MspInit 0 */
 
-  /* USER CODE END TIM3_MspInit 0 */
+  /* USER CODE END ADC1_MspInit 0 */
     /* Peripheral clock enable */
-    __HAL_RCC_TIM3_CLK_ENABLE();
+    __HAL_RCC_ADC1_CLK_ENABLE();
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**TIM3 GPIO Configuration
-    PA7     ------> TIM3_CH2
+    /**ADC1 GPIO Configuration
+    PA0-WKUP     ------> ADC1_IN0
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_7;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /* TIM3 interrupt Init */
-    HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM3_IRQn);
-  /* USER CODE BEGIN TIM3_MspInit 1 */
+  /* USER CODE BEGIN ADC1_MspInit 1 */
 
-  /* USER CODE END TIM3_MspInit 1 */
+  /* USER CODE END ADC1_MspInit 1 */
   }
 
 }
 
 /**
-* @brief TIM_Base MSP De-Initialization
+* @brief ADC MSP De-Initialization
 * This function freeze the hardware resources used in this example
-* @param htim_base: TIM_Base handle pointer
+* @param hadc: ADC handle pointer
 * @retval None
 */
-void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
+void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 {
-  if(htim_base->Instance==TIM3)
+  if(hadc->Instance==ADC1)
   {
-  /* USER CODE BEGIN TIM3_MspDeInit 0 */
+  /* USER CODE BEGIN ADC1_MspDeInit 0 */
 
-  /* USER CODE END TIM3_MspDeInit 0 */
+  /* USER CODE END ADC1_MspDeInit 0 */
     /* Peripheral clock disable */
-    __HAL_RCC_TIM3_CLK_DISABLE();
+    __HAL_RCC_ADC1_CLK_DISABLE();
 
-    /**TIM3 GPIO Configuration
-    PA7     ------> TIM3_CH2
+    /**ADC1 GPIO Configuration
+    PA0-WKUP     ------> ADC1_IN0
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_7);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
 
-    /* TIM3 interrupt DeInit */
-    HAL_NVIC_DisableIRQ(TIM3_IRQn);
-  /* USER CODE BEGIN TIM3_MspDeInit 1 */
+  /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
-  /* USER CODE END TIM3_MspDeInit 1 */
+  /* USER CODE END ADC1_MspDeInit 1 */
   }
 
 }
