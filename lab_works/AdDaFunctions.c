@@ -12,9 +12,8 @@ void RawToVolt(uint32_t *pbuf_raw, float* pbuf_float, uint8_t size)
 	}
 }
 
-void AdcExecution_SingleConversion(ADC_HandleTypeDef* hadc)
+void AdcExecution(ADC_HandleTypeDef* hadc)
 {
-	HAL_ADC_Start(hadc);
 	if(HAL_ADC_PollForConversion(hadc, TIMEOUT_100) == HAL_OK)
 	{
 		uint32_t adc_value = HAL_ADC_GetValue(hadc);
@@ -29,5 +28,13 @@ void AdcExecution_SingleConversion(ADC_HandleTypeDef* hadc)
 			buffer_index = 0;
 		}
 	}
+}
+
+void AdcExecution_SingleConversion(ADC_HandleTypeDef* hadc)
+{
+	HAL_ADC_Start(hadc);
+	AdcExecution(hadc);
 	HAL_ADC_Stop(hadc);
 }
+
+

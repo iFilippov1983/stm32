@@ -16,6 +16,7 @@
 #define ADC_REF 3.3
 
 void RawToVolt(uint32_t *pbuf_raw, float* pbuf_float, uint8_t size);
+void AdcExecution(ADC_HandleTypeDef* hadc);
 void AdcExecution_SingleConversion(ADC_HandleTypeDef* hadc);
 
 #endif /* ADDAFUNCTIONS_H_ */
