@@ -37,4 +37,18 @@ void AdcExecution_SingleConversion(ADC_HandleTypeDef* hadc)
 	HAL_ADC_Stop(hadc);
 }
 
+void AdcExecution_HandleCallback(ADC_HandleTypeDef* hadc)
+{
+	if(buffer_index < BUFFER_SIZE)
+	{
+		adc_buffer[buffer_index] = HAL_ADC_GetValue(hadc);
+		buffer_index++;
+	}
+	else
+	{
+		RawToVolt(adc_buffer, volt_buffer, BUFFER_SIZE);
+		buffer_index = 0;
+	}
+}
+
 
