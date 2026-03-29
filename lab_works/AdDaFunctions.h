@@ -4,6 +4,8 @@
  *  Created on: Mar 22, 2026
  *      Author: HYPERPC
  */
+#ifdef HAL_ADC_MODULE_ENABLED
+
 #include "main.h"
 #include "stm32f1xx_hal.h"
 
@@ -21,3 +23,5 @@ void AdcExecution_SingleConversion(ADC_HandleTypeDef* hadc);
 void AdcExecution_HandleCallback(ADC_HandleTypeDef* hadc);
 
 #endif /* ADDAFUNCTIONS_H_ */
+
+#endif

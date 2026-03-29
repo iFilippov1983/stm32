@@ -1,3 +1,5 @@
+#ifdef HAL_ADC_MODULE_ENABLED
+
 #include "AdDaFunctions.h"
 
 float volt_buffer[BUFFER_SIZE];
@@ -51,4 +53,4 @@ void AdcExecution_HandleCallback(ADC_HandleTypeDef* hadc)
 	}
 }
 
-
+#endif

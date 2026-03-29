@@ -1,3 +1,5 @@
+#ifdef HAL_TIM_MODULE_ENABLED
+
 #include "LabWorks.h"
 
 LED_FR ledFreq = FR_0;
@@ -9,7 +11,7 @@ int ledMsCounter = 0;
 BUTTON_STATE buttonState = RELEASED;
 
 /*lab_1, lab_2 -------------------------------------------------*/
-/*
+
 void BlinkLed(int blinkPeriod, int bliksAmount)
 {
 	for (int i = 0; i < bliksAmount; i++)
@@ -87,11 +89,9 @@ void LightLedIfButtonPressed_EXTI()
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 	}
 }
-*/
 
 /*lab_4 -------------------------------------------------*/
 
-/*
 void HandleExtiCallback_Simple(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_9)
@@ -136,11 +136,8 @@ void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin)
 	}
 }
 
-*/
-
 /*lab_4 -------------------------------------------------*/
 
-/*
 GPIO_PinState IsButtonPressed()
 {
 	return !HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
@@ -187,10 +184,7 @@ void LedToggle()
 	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 }
 
-*/
-
 /*Bad delay implementation*/
-/*
 void DelayMs(uint16_t ms, TIM_HandleTypeDef *htim)
 {
 	for(uint16_t i = 0; i < ms; i++)
@@ -225,4 +219,5 @@ void BlinkLed_TIM_DelayWithCounter(int ms, TIM_HandleTypeDef *htim)
 		DelayWithCounter_Reset();
 	}
 }
-*/
+
+#endif
