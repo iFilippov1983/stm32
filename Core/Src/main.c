@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include <string.h>
 #include "simple_math.h"
 #include "LabWorks.h"
 #include "AdDaFunctions.h"
@@ -31,12 +32,26 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
-
+typedef enum
+{
+	STATE_SEND_MSG,
+	STATE_WAIT_FOR_MASTER_MSG_ACK,
+	STATE_SEND_POLL,
+	STATE_WAIT_FOR_SLAVE_MSG_ACK
+} MasterState_t;
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+#define SPI_BUFFER_SIZE 16
+
+const char* MASTER_STR = "Master Message";
+const char* SLAVE_STR = "Slave Message";
+const char* SLAVE_ERROR_STR = "Slave Error";
+const char* MASTER_POLL_STR = "Get Response...";
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -45,20 +60,51 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
+
+uint8_t master_tx_buf[SPI_BUFFER_SIZE];
+uint8_t master_rx_buf[SPI_BUFFER_SIZE];
+
+MasterState_t master_state = STATE_SEND_MSG;
+
+volatile uint8_t transfer_complete = 0;
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	if(hspi->Instance == SPI1)
+	{
+		transfer_complete = 1;
+	}
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == SPI1_NSS_Pin)
+	{
+		if(HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_READY)
+		{
+			if(HAL_SPI_TransmitReceive_IT(&hspi1, master_tx_buf, master_rx_buf, SPI_BUFFER_SIZE) != HAL_OK)
+			{
+				Error_Handler();
+			}
+		}
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -90,6 +136,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -98,6 +145,78 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	 if(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY)
+	 {
+		 continue;
+	 }
+
+	 switch(master_state)
+	 {
+		 case STATE_SEND_MSG:
+			 /* подготовка строки и отправка TramsmitReceive_IT */
+			 strcpy((char*)master_tx_buf, MASTER_STR);
+
+			 HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_RESET);
+
+			 if(HAL_SPI_TransmitReceive_IT(&hspi1, master_tx_buf, master_rx_buf, SPI_BUFFER_SIZE) != HAL_OK)
+			 {
+				 Error_Handler();
+			 }
+
+			 master_state = STATE_WAIT_FOR_MASTER_MSG_ACK;
+			 break;
+
+		 case STATE_WAIT_FOR_MASTER_MSG_ACK:
+			 if(transfer_complete)
+			 {
+				 HAL_Delay(1);
+				 master_state = STATE_SEND_POLL;
+			 }
+			 break;
+
+		 case STATE_SEND_POLL:
+			 transfer_complete = 0;
+
+			 /* подготовка мусорной строки и отправка TramsmitReceive_IT */
+			 strcpy((char*)master_tx_buf, MASTER_POLL_STR);
+
+			 HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_RESET);
+
+			 if(HAL_SPI_TransmitReceive_IT(&hspi1, master_tx_buf, master_rx_buf, SPI_BUFFER_SIZE) != HAL_OK)
+			 {
+			 	Error_Handler();
+			 }
+
+			 master_state = STATE_WAIT_FOR_SLAVE_MSG_ACK;
+			 break;
+
+		 case STATE_WAIT_FOR_SLAVE_MSG_ACK:
+			 if(transfer_complete)
+			 {
+				 if(strcmp((char*)master_rx_buf, SLAVE_STR) == 0)
+				 {
+					 /* если "Slave Message", то ОК*/
+					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+					 HAL_Delay(500);
+					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+				 }
+				 else
+				 {
+					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+					 HAL_Delay(250);
+					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+					 HAL_Delay(250);
+					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+					 HAL_Delay(250);
+					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+				 }
+
+				 HAL_Delay(1000);
+				 master_state = STATE_SEND_MSG;
+			 }
+
+			 break;
+	 }
 
     /* USER CODE END WHILE */
 
@@ -145,6 +264,44 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -168,12 +325,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : USART_TX_Pin USART_RX_Pin */
-  GPIO_InitStruct.Pin = USART_TX_Pin|USART_RX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -181,14 +332,25 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : USART_TX_Pin USART_RX_Pin */
+  GPIO_InitStruct.Pin = USART_TX_Pin|USART_RX_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI1_NSS_Pin */
+  GPIO_InitStruct.Pin = SPI1_NSS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SPI1_NSS_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	HandleExtiCallback_SwitchFr(GPIO_Pin);
-}
 
 /* USER CODE END 4 */
 
