@@ -21,4 +21,5 @@
 "./Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim_ex.o"
 "./lab_works/AdDaFunctions.o"
 "./lab_works/LabWorks.o"
+"./lab_works/SpiFunctions.o"
 "./simple_math/simple_math.o"

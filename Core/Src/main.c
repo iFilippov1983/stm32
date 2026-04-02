@@ -26,26 +26,17 @@
 #include "simple_math.h"
 #include "LabWorks.h"
 #include "AdDaFunctions.h"
+#include "SpiFunctions.h"
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
-typedef enum
-{
-	STATE_SEND_MSG,
-	STATE_WAIT_FOR_MASTER_MSG_ACK,
-	STATE_SEND_POLL,
-	STATE_WAIT_FOR_SLAVE_MSG_ACK
-} MasterState_t;
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
-#define SPI_BUFFER_SIZE 16
 
 const char* MASTER_STR = "Master Message";
 const char* SLAVE_STR = "Slave Message";
@@ -64,13 +55,6 @@ SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
 
-uint8_t master_tx_buf[SPI_BUFFER_SIZE];
-uint8_t master_rx_buf[SPI_BUFFER_SIZE];
-
-MasterState_t master_state = STATE_SEND_MSG;
-
-volatile uint8_t transfer_complete = 0;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -88,7 +72,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	if(hspi->Instance == SPI1)
 	{
-		transfer_complete = 1;
+		SetTransferCompleteStatus(1);
 	}
 }
 
@@ -96,13 +80,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == SPI1_NSS_Pin)
 	{
-		if(HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_READY)
-		{
-			if(HAL_SPI_TransmitReceive_IT(&hspi1, master_tx_buf, master_rx_buf, SPI_BUFFER_SIZE) != HAL_OK)
-			{
-				Error_Handler();
-			}
-		}
+		HandleGpioCallback(&hspi1);
 	}
 }
 
@@ -145,79 +123,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	 if(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY)
-	 {
-		 continue;
-	 }
-
-	 switch(master_state)
-	 {
-		 case STATE_SEND_MSG:
-			 /* подготовка строки и отправка TramsmitReceive_IT */
-			 strcpy((char*)master_tx_buf, MASTER_STR);
-
-			 HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_RESET);
-
-			 if(HAL_SPI_TransmitReceive_IT(&hspi1, master_tx_buf, master_rx_buf, SPI_BUFFER_SIZE) != HAL_OK)
-			 {
-				 Error_Handler();
-			 }
-
-			 master_state = STATE_WAIT_FOR_MASTER_MSG_ACK;
-			 break;
-
-		 case STATE_WAIT_FOR_MASTER_MSG_ACK:
-			 if(transfer_complete)
-			 {
-				 HAL_Delay(1);
-				 master_state = STATE_SEND_POLL;
-			 }
-			 break;
-
-		 case STATE_SEND_POLL:
-			 transfer_complete = 0;
-
-			 /* подготовка мусорной строки и отправка TramsmitReceive_IT */
-			 strcpy((char*)master_tx_buf, MASTER_POLL_STR);
-
-			 HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_RESET);
-
-			 if(HAL_SPI_TransmitReceive_IT(&hspi1, master_tx_buf, master_rx_buf, SPI_BUFFER_SIZE) != HAL_OK)
-			 {
-			 	Error_Handler();
-			 }
-
-			 master_state = STATE_WAIT_FOR_SLAVE_MSG_ACK;
-			 break;
-
-		 case STATE_WAIT_FOR_SLAVE_MSG_ACK:
-			 if(transfer_complete)
-			 {
-				 if(strcmp((char*)master_rx_buf, SLAVE_STR) == 0)
-				 {
-					 /* если "Slave Message", то ОК*/
-					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-					 HAL_Delay(500);
-					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-				 }
-				 else
-				 {
-					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-					 HAL_Delay(250);
-					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-					 HAL_Delay(250);
-					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-					 HAL_Delay(250);
-					 HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-				 }
-
-				 HAL_Delay(1000);
-				 master_state = STATE_SEND_MSG;
-			 }
-
-			 break;
-	 }
-
+	  HandleMainThread(
+	  &hspi1, LD2_GPIO_Port, LD2_Pin, MASTER_STR, MASTER_POLL_STR, SLAVE_STR);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
