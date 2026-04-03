@@ -19,9 +19,9 @@ void HandleMainThread
 	SPI_HandleTypeDef *hspi,
 	GPIO_TypeDef *LED_GPIOx,
 	uint16_t LED_GPIO_Pin,
-	char* MASTER_STR,
-	char* MASTER_POLL_STR,
-	char* SLAVE_STR
+	const char* MASTER_STR,
+	const char* MASTER_POLL_STR,
+	const char* SLAVE_STR
 );
 void HandleGpioCallback(SPI_HandleTypeDef *hspi);
 void SetTransferCompleteStatus(uint8_t status);

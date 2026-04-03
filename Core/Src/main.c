@@ -123,8 +123,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HandleMainThread(
-	  &hspi1, LD2_GPIO_Port, LD2_Pin, MASTER_STR, MASTER_POLL_STR, SLAVE_STR);
+	  HandleMainThread(&hspi1, LD2_GPIO_Port, LD2_Pin, MASTER_STR, MASTER_POLL_STR, SLAVE_STR);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
