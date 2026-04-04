@@ -38,6 +38,9 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+#define I2C_BUFFER_SIZE 16
+#define SLAVE_I2C_ADDR (0x30 << 1) // (0x30 - 7-битный адрес) << 1 = 0x60 сдвигаем на 1 разряд влево в двоичном представлении из-за особенности работы i2c
+
 const char* MASTER_STR = "Master Message";
 const char* SLAVE_STR = "Slave Message";
 const char* SLAVE_ERROR_STR = "Slave Error";
@@ -51,16 +54,25 @@ const char* MASTER_POLL_STR = "Get Response...";
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-SPI_HandleTypeDef hspi1;
+I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN PV */
+
+MasterState_t master_state = STATE_SEND_MSG;
+
+volatile uint8_t i2c_error = 0;
+volatile uint8_t receive_complete = 0;
+volatile uint8_t transfer_complete = 0;
+
+uint8_t master_tx_buf[I2C_BUFFER_SIZE];
+uint8_t master_rx_buf[I2C_BUFFER_SIZE];
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_SPI1_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -68,19 +80,27 @@ static void MX_SPI1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-	if(hspi->Instance == SPI1)
+	if(hi2c->Instance == I2C1)
 	{
-		SetTransferCompleteStatus(1);
+		transfer_complete = 1;
 	}
 }
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-	if(GPIO_Pin == SPI1_NSS_Pin)
+	if(hi2c->Instance == I2C1)
 	{
-		HandleGpioCallback(&hspi1);
+		receive_complete = 1;
+	}
+}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
+{
+	if(hi2c->Instance == I2C1)
+	{
+		i2c_error = 1;
 	}
 }
 
@@ -114,7 +134,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_SPI1_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -123,7 +143,78 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HandleMainThread(&hspi1, LD2_GPIO_Port, LD2_Pin, MASTER_STR, MASTER_POLL_STR, SLAVE_STR);
+	  if(i2c_error)
+	  {
+		  i2c_error = 0;
+		  HAL_Delay(500);
+		  master_state = STATE_SEND_MSG;
+	  }
+
+	  if(HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
+	  {
+		  continue;
+	  }
+
+	  switch(master_state)
+	  {
+	  	  case STATE_SEND_MSG:
+	  		  transfer_complete = 0;
+	  		  strcpy((char*)master_tx_buf, MASTER_STR);
+
+	  		  if(HAL_I2C_Master_Transmit_IT(&hi2c1, SLAVE_I2C_ADDR, master_tx_buf, I2C_BUFFER_SIZE) != HAL_OK)
+	  		  {
+	  			  Error_Handler();
+	  		  }
+
+	  		  master_state = STATE_WAIT_FOR_MASTER_MSG_ACK;
+	  		  break;
+
+	  	  case STATE_WAIT_FOR_MASTER_MSG_ACK:
+	  		  if(transfer_complete)
+	  		  {
+	  			  transfer_complete = 0;
+	  			  HAL_Delay(10);
+	  			  master_state = STATE_RECEIVE_MSG;
+	  		  }
+	  		  break;
+
+	  	  case STATE_RECEIVE_MSG:
+	  		  if(HAL_I2C_Master_Receive_IT(&hi2c1, SLAVE_I2C_ADDR, master_rx_buf, I2C_BUFFER_SIZE) != HAL_OK)
+	   		  {
+	  			  Error_Handler();
+	   		  }
+
+	  		  master_state = STAE_WAIT_FOR_RECEIVE;
+	  		  break;
+
+	  	  case STAE_WAIT_FOR_RECEIVE:
+	  		  if(receive_complete)
+	  		  {
+	  			  receive_complete = 0;
+
+	  			  if(strcmp((char*)master_rx_buf, SLAVE_STR) == 0)
+	  			  {
+	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	  				  HAL_Delay(500);
+	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	  			  }
+	  			  else
+	  			  {
+	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	  				  HAL_Delay(250);
+	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	  				  HAL_Delay(250);
+	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	  				  HAL_Delay(250);
+	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	  			  }
+	  		  }
+
+	  		  HAL_Delay(1000);
+	  		  master_state = STATE_SEND_MSG;
+	  		  break;
+	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -170,40 +261,36 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief SPI1 Initialization Function
+  * @brief I2C1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_SPI1_Init(void)
+static void MX_I2C1_Init(void)
 {
 
-  /* USER CODE BEGIN SPI1_Init 0 */
+  /* USER CODE BEGIN I2C1_Init 0 */
 
-  /* USER CODE END SPI1_Init 0 */
+  /* USER CODE END I2C1_Init 0 */
 
-  /* USER CODE BEGIN SPI1_Init 1 */
+  /* USER CODE BEGIN I2C1_Init 1 */
 
-  /* USER CODE END SPI1_Init 1 */
-  /* SPI1 parameter configuration*/
-  hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_MASTER;
-  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 10;
-  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN SPI1_Init 2 */
+  /* USER CODE BEGIN I2C1_Init 2 */
 
-  /* USER CODE END SPI1_Init 2 */
+  /* USER CODE END I2C1_Init 2 */
 
 }
 
@@ -243,16 +330,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SPI1_NSS_Pin */
-  GPIO_InitStruct.Pin = SPI1_NSS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SPI1_NSS_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 

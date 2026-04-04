@@ -69,9 +69,6 @@ void Error_Handler(void);
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
-#define SPI1_NSS_Pin GPIO_PIN_6
-#define SPI1_NSS_GPIO_Port GPIOB
-#define SPI1_NSS_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

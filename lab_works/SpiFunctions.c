@@ -1,3 +1,5 @@
+#ifdef HAL_SPI_MODULE_ENABLED
+
 #include <string.h>
 #include "SpiFunctions.h"
 
@@ -67,22 +69,22 @@ void HandleMainThread
 			if(transfer_complete)
 			{
 				if(strcmp((char*)master_rx_buf, SLAVE_STR) == 0)
-			{
+				{
 					/* если "Slave Message", то ОК*/
-				HAL_GPIO_WritePin(LED_GPIOx, LED_GPIO_Pin, GPIO_PIN_SET);
-				HAL_Delay(500);
-				HAL_GPIO_WritePin(LED_GPIOx, LED_GPIO_Pin, GPIO_PIN_RESET);
-			}
+					HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+					HAL_Delay(500);
+					HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+				}
 			else
-			{
-				HAL_GPIO_WritePin(LED_GPIOx, LED_GPIO_Pin, GPIO_PIN_SET);
-				HAL_Delay(250);
-				HAL_GPIO_WritePin(LED_GPIOx, LED_GPIO_Pin, GPIO_PIN_RESET);
-				HAL_Delay(250);
-				HAL_GPIO_WritePin(LED_GPIOx, LED_GPIO_Pin, GPIO_PIN_SET);
-				HAL_Delay(250);
-				HAL_GPIO_WritePin(LED_GPIOx, LED_GPIO_Pin, GPIO_PIN_RESET);
-			}
+				{
+					HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+					HAL_Delay(250);
+					HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+					HAL_Delay(250);
+					HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+					HAL_Delay(250);
+					HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+				}
 
 				HAL_Delay(1000);
 				master_state = STATE_SEND_MSG;
@@ -107,3 +109,4 @@ void SetTransferCompleteStatus(uint8_t status)
 	transfer_complete = status;
 }
 
+#endif
