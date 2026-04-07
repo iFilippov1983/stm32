@@ -27,6 +27,7 @@
 #include "LabWorks.h"
 #include "AdDaFunctions.h"
 #include "SpiFunctions.h"
+#include "I2cFunctions.h"
 
 /* USER CODE END Includes */
 
@@ -37,9 +38,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
-#define I2C_BUFFER_SIZE 16
-#define SLAVE_I2C_ADDR (0x30 << 1) // (0x30 - 7-битный адрес) << 1 = 0x60 сдвигаем на 1 разряд влево в двоичном представлении из-за особенности работы i2c
 
 const char* MASTER_STR = "Master Message";
 const char* SLAVE_STR = "Slave Message";
@@ -58,14 +56,7 @@ I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN PV */
 
-MasterState_t master_state = STATE_SEND_MSG;
 
-volatile uint8_t i2c_error = 0;
-volatile uint8_t receive_complete = 0;
-volatile uint8_t transfer_complete = 0;
-
-uint8_t master_tx_buf[I2C_BUFFER_SIZE];
-uint8_t master_rx_buf[I2C_BUFFER_SIZE];
 
 /* USER CODE END PV */
 
@@ -84,7 +75,7 @@ void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
 	if(hi2c->Instance == I2C1)
 	{
-		transfer_complete = 1;
+		SetTransferCompleteStatus(1);
 	}
 }
 
@@ -92,7 +83,7 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
 	if(hi2c->Instance == I2C1)
 	{
-		receive_complete = 1;
+		SetReceiveCompleteStatus(1);
 	}
 }
 
@@ -100,7 +91,7 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
 {
 	if(hi2c->Instance == I2C1)
 	{
-		i2c_error = 1;
+		SetI2cErrorStatus(1);
 	}
 }
 
@@ -143,77 +134,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(i2c_error)
-	  {
-		  i2c_error = 0;
-		  HAL_Delay(500);
-		  master_state = STATE_SEND_MSG;
-	  }
-
-	  if(HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY)
-	  {
-		  continue;
-	  }
-
-	  switch(master_state)
-	  {
-	  	  case STATE_SEND_MSG:
-	  		  transfer_complete = 0;
-	  		  strcpy((char*)master_tx_buf, MASTER_STR);
-
-	  		  if(HAL_I2C_Master_Transmit_IT(&hi2c1, SLAVE_I2C_ADDR, master_tx_buf, I2C_BUFFER_SIZE) != HAL_OK)
-	  		  {
-	  			  Error_Handler();
-	  		  }
-
-	  		  master_state = STATE_WAIT_FOR_MASTER_MSG_ACK;
-	  		  break;
-
-	  	  case STATE_WAIT_FOR_MASTER_MSG_ACK:
-	  		  if(transfer_complete)
-	  		  {
-	  			  transfer_complete = 0;
-	  			  HAL_Delay(10);
-	  			  master_state = STATE_RECEIVE_MSG;
-	  		  }
-	  		  break;
-
-	  	  case STATE_RECEIVE_MSG:
-	  		  if(HAL_I2C_Master_Receive_IT(&hi2c1, SLAVE_I2C_ADDR, master_rx_buf, I2C_BUFFER_SIZE) != HAL_OK)
-	   		  {
-	  			  Error_Handler();
-	   		  }
-
-	  		  master_state = STAE_WAIT_FOR_RECEIVE;
-	  		  break;
-
-	  	  case STAE_WAIT_FOR_RECEIVE:
-	  		  if(receive_complete)
-	  		  {
-	  			  receive_complete = 0;
-
-	  			  if(strcmp((char*)master_rx_buf, SLAVE_STR) == 0)
-	  			  {
-	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-	  				  HAL_Delay(500);
-	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-	  			  }
-	  			  else
-	  			  {
-	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-	  				  HAL_Delay(250);
-	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-	  				  HAL_Delay(250);
-	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-	  				  HAL_Delay(250);
-	  				  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-	  			  }
-	  		  }
-
-	  		  HAL_Delay(1000);
-	  		  master_state = STATE_SEND_MSG;
-	  		  break;
-	  }
+	  HandleMainThread(&hi2c1, LD2_GPIO_Port, LD2_Pin, MASTER_STR, SLAVE_STR);
 
     /* USER CODE END WHILE */
 

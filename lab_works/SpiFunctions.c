@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include "SpiFunctions.h"
+#include "LabWorks.h"
 
 uint8_t master_tx_buf[SPI_BUFFER_SIZE];
 uint8_t master_rx_buf[SPI_BUFFER_SIZE];
