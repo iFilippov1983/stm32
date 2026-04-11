@@ -21,6 +21,7 @@ void BlinkLed(int blinkPeriod, int bliksAmount)
 	}
 }
 
+#ifdef B1_STATE_Pin
 void BlinkLed_EXTI_WithDelay(int blinkPeriod)
 {
 	if (!(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET))
@@ -133,6 +134,7 @@ void HandleExtiCallback_SwitchFr(uint16_t GPIO_Pin)
 	    }
 	}
 }
+#endif
 
 /*lab_4 -------------------------------------------------*/
 
