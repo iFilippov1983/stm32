@@ -56,19 +56,13 @@ void HandleMainThread
 		SetTransferCompleteStatus(0);
 		strcpy((char*)master_tx_buf, MASTER_STR);
 
-		if(use_dma)
+		HAL_StatusTypeDef status = use_dma
+				? HAL_I2C_Master_Transmit_DMA(hi2c, SLAVE_I2C_ADDR, master_tx_buf, I2C_BUFFER_SIZE)
+				: HAL_I2C_Master_Transmit_IT(hi2c, SLAVE_I2C_ADDR, master_tx_buf, I2C_BUFFER_SIZE);
+
+		if(status != HAL_OK)
 		{
-			if (HAL_I2C_Master_Transmit_DMA(hi2c, SLAVE_I2C_ADDR, master_tx_buf, I2C_BUFFER_SIZE) != HAL_OK)
-			{
-				Error_Handler();
-			}
-		}
-		else
-		{
-			if (HAL_I2C_Master_Transmit_IT(hi2c, SLAVE_I2C_ADDR, master_tx_buf, I2C_BUFFER_SIZE) != HAL_OK)
-			{
-				Error_Handler();
-			}
+			Error_Handler();
 		}
 
 		master_state = STATE_WAIT_FOR_MASTER_MSG_ACK;
@@ -84,19 +78,13 @@ void HandleMainThread
 		break;
 
 	case STATE_RECEIVE_MSG:
-		if(use_dma)
+		HAL_StatusTypeDef status = use_dma
+			? HAL_I2C_Master_Receive_DMA(hi2c, SLAVE_I2C_ADDR, master_rx_buf, I2C_BUFFER_SIZE)
+			: HAL_I2C_Master_Receive_IT(hi2c, SLAVE_I2C_ADDR, master_rx_buf, I2C_BUFFER_SIZE);
+
+		if(status != HAL_OK)
 		{
-			if (HAL_I2C_Master_Receive_DMA(hi2c, SLAVE_I2C_ADDR, master_rx_buf, I2C_BUFFER_SIZE) != HAL_OK)
-			{
-				Error_Handler();
-			}
-		}
-		else
-		{
-			if (HAL_I2C_Master_Receive_IT(hi2c, SLAVE_I2C_ADDR, master_rx_buf, I2C_BUFFER_SIZE) != HAL_OK)
-			{
-				Error_Handler();
-			}
+			Error_Handler();
 		}
 
 		master_state = STAE_WAIT_FOR_RECEIVE;
