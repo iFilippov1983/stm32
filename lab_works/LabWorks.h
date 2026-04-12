@@ -11,6 +11,8 @@ typedef enum
 	RELEASED, PRESSED
 } BUTTON_STATE;
 
+#define PWM_BUFFER_SIZE 5000
+
 #ifndef LABWORKS_H_
 #define LABWORKS_H_
 
@@ -33,5 +35,7 @@ int DelayWithCounter_Check(int ms, TIM_HandleTypeDef *htim);
 void DelayWithCounter_Reset();
 void BlinkLed_TIM_DelayWithCounter(int ms, TIM_HandleTypeDef *htim);
 void BlinkLed_TIM_DelayWithCounter(int ms, TIM_HandleTypeDef *htim);
+
+void FillPwm(uint16_t *ppwm_buffer, uint16_t size);
 
 #endif /* LABWORKS_H_ */

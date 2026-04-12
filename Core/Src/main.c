@@ -49,6 +49,8 @@ DMA_HandleTypeDef hdma_tim4_up;
 
 /* USER CODE BEGIN PV */
 
+uint16_t pwm_buffer[PWM_BUFFER_SIZE];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,6 +99,14 @@ int main(void)
   MX_DMA_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+
+  FillPwm(pwm_buffer, PWM_BUFFER_SIZE);
+
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+
+  HAL_DMA_Start_IT(&hdma_tim4_up, (uint32_t*)pwm_buffer, (uint32_t*)&(htim4.Instance->CCR1), PWM_BUFFER_SIZE);
+
+  __HAL_TIM_ENABLE_DMA(&htim4, TIM_DMA_UPDATE);
 
   /* USER CODE END 2 */
 

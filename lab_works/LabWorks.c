@@ -219,3 +219,22 @@ void BlinkLed_TIM_DelayWithCounter(int ms, TIM_HandleTypeDef *htim)
 		DelayWithCounter_Reset();
 	}
 }
+
+//lab 7 part 1------------------------------------------
+void FillPwm(uint16_t *ppwm_buffer, uint16_t size)
+{
+	uint16_t value = 0;
+	for(int i = 0; i < size / 2; i++)
+	{
+		value = (i * 999 * 2) / size;
+		ppwm_buffer[i] = value;
+	}
+
+	int v = size / 2;
+	for(int i = size / 2; i < size; i++)
+	{
+		value = (v * 999 * 2) / size;
+		ppwm_buffer[i] = value;
+		v--;
+	}
+}
