@@ -1,9 +1,3 @@
-/*
- * AdDaFunctions.h
- *
- *  Created on: Mar 22, 2026
- *      Author: HYPERPC
- */
 #ifdef HAL_ADC_MODULE_ENABLED
 
 #include "main.h"
