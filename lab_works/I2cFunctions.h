@@ -15,7 +15,8 @@ void HandleMainThread
 	GPIO_TypeDef* LED_GPIO_Port,
 	uint16_t LED_Pin,
 	const char* MASTER_STR,
-	const char* SLAVE_STR
+	const char* SLAVE_STR,
+	uint8_t use_dma
 );
 void SetTransferCompleteStatus(uint8_t status);
 void SetReceiveCompleteStatus(uint8_t status);

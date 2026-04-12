@@ -1,4 +1,4 @@
-#ifdef HAL_I2C_MODULE_ENABLED
+//#ifdef HAL_I2C_MODULE_ENABLED
 
 #include <string.h>
 #include "I2cFunctions.h"
@@ -34,12 +34,13 @@ void HandleMainThread
 	GPIO_TypeDef* LED_GPIO_Port,
 	uint16_t LED_Pin,
 	const char* MASTER_STR,
-	const char* SLAVE_STR
+	const char* SLAVE_STR,
+	uint8_t use_dma
 )
 {
 	if (i2c_error)
 	{
-		i2c_error = 0;
+		SetI2cErrorStatus(0);
 		HAL_Delay(500);
 		master_state = STATE_SEND_MSG;
 	}
@@ -52,12 +53,22 @@ void HandleMainThread
 	switch (master_state)
 	{
 	case STATE_SEND_MSG:
-		transfer_complete = 0;
+		SetTransferCompleteStatus(0);
 		strcpy((char*)master_tx_buf, MASTER_STR);
 
-		if (HAL_I2C_Master_Transmit_IT(hi2c, SLAVE_I2C_ADDR, master_tx_buf, I2C_BUFFER_SIZE) != HAL_OK)
+		if(use_dma)
 		{
-			Error_Handler();
+			if (HAL_I2C_Master_Transmit_DMA(hi2c, SLAVE_I2C_ADDR, master_tx_buf, I2C_BUFFER_SIZE) != HAL_OK)
+			{
+				Error_Handler();
+			}
+		}
+		else
+		{
+			if (HAL_I2C_Master_Transmit_IT(hi2c, SLAVE_I2C_ADDR, master_tx_buf, I2C_BUFFER_SIZE) != HAL_OK)
+			{
+				Error_Handler();
+			}
 		}
 
 		master_state = STATE_WAIT_FOR_MASTER_MSG_ACK;
@@ -66,16 +77,26 @@ void HandleMainThread
 	case STATE_WAIT_FOR_MASTER_MSG_ACK:
 		if (transfer_complete)
 		{
-			transfer_complete = 0;
+			SetTransferCompleteStatus(0);
 			HAL_Delay(10);
 			master_state = STATE_RECEIVE_MSG;
 		}
 		break;
 
 	case STATE_RECEIVE_MSG:
-		if (HAL_I2C_Master_Receive_IT(hi2c, SLAVE_I2C_ADDR, master_rx_buf, I2C_BUFFER_SIZE) != HAL_OK)
+		if(use_dma)
 		{
-			Error_Handler();
+			if (HAL_I2C_Master_Receive_DMA(hi2c, SLAVE_I2C_ADDR, master_rx_buf, I2C_BUFFER_SIZE) != HAL_OK)
+			{
+				Error_Handler();
+			}
+		}
+		else
+		{
+			if (HAL_I2C_Master_Receive_IT(hi2c, SLAVE_I2C_ADDR, master_rx_buf, I2C_BUFFER_SIZE) != HAL_OK)
+			{
+				Error_Handler();
+			}
 		}
 
 		master_state = STAE_WAIT_FOR_RECEIVE;
@@ -84,7 +105,7 @@ void HandleMainThread
 	case STAE_WAIT_FOR_RECEIVE:
 		if (receive_complete)
 		{
-			receive_complete = 0;
+			SetReceiveCompleteStatus(0);
 
 			if (strcmp((char*)master_rx_buf, SLAVE_STR) == 0)
 			{
@@ -114,6 +135,6 @@ void HandleMainThread
 	}
 }
 
-#endif
+//#endif
 
 
