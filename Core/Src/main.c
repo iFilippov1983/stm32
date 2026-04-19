@@ -76,11 +76,11 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	}
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	if(htim->Instance == TIM3)
+	if(huart->Instance == USART2)
 	{
-		SetUsartState(READY);
+		IterateRxByteInBuffer(huart);
 	}
 }
 
@@ -118,7 +118,7 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_Base_Start_IT(&htim3);
+  ReseiveStr_ByByte(&huart2);
 
   /* USER CODE END 2 */
 
@@ -126,10 +126,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(!(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET))
-	  {
-		  SendStr_IT_TIM(&huart2, &htim3);
-	  }
+	  SendStr_AfterReceive(&huart2);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -236,7 +234,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 9600;
+  huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
