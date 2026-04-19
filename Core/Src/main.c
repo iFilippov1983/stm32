@@ -28,16 +28,12 @@
 #include "AdDaFunctions.h"
 #include "SpiFunctions.h"
 #include "I2cFunctions.h"
+#include "UsartFunctions.h"
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
-typedef enum
-{
-	WAITING, READY, SENDING, DONE
-}UART_STATE;
 
 /* USER CODE END PTD */
 
@@ -58,13 +54,6 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-const uint32_t UART_TIMEOUT_MS = 100;
-const uint32_t DELAY_MS = 1000;
-
-char hello_str[] = "Hello from F103!\r\n";
-
-volatile UART_STATE uart_state = WAITING;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -83,7 +72,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(huart->Instance == USART2)
 	{
-		uart_state = DONE;
+		SetUsartState(DONE);
 	}
 }
 
@@ -91,37 +80,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM3)
 	{
-		uart_state = READY;
-	}
-}
-
-void SendStr_Blocking()
-{
-	HAL_UART_Transmit(&huart2, hello_str, strlen(hello_str), UART_TIMEOUT_MS);
-	HAL_Delay(DELAY_MS);
-}
-
-void SendStr_IT()
-{
-	if(uart_state == READY)
-	{
-		HAL_UART_Transmit_IT(&huart2, hello_str, strlen(hello_str));
-		uart_state = SENDING;
-	}
-}
-
-void SendStr_IT_TIM()
-{
-	if(uart_state == READY)
-	{
-		HAL_UART_Transmit_IT(&huart2, hello_str, strlen(hello_str));
-		HAL_TIM_Base_Stop_IT(&htim3);
-		uart_state = SENDING;
-	}
-	else if(uart_state == DONE)
-	{
-		HAL_TIM_Base_Start_IT(&htim3);
-		uart_state = WAITING;
+		SetUsartState(READY);
 	}
 }
 
@@ -167,7 +126,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  SendStr_IT_TIM();
+	  if(!(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET))
+	  {
+		  SendStr_IT_TIM(&huart2, &htim3);
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -8,19 +8,22 @@ C_SRCS += \
 ../lab_works/AdDaFunctions.c \
 ../lab_works/I2cFinctions.c \
 ../lab_works/LabWorks.c \
-../lab_works/SpiFunctions.c 
+../lab_works/SpiFunctions.c \
+../lab_works/UsartFunctions.c 
 
 C_DEPS += \
 ./lab_works/AdDaFunctions.d \
 ./lab_works/I2cFinctions.d \
 ./lab_works/LabWorks.d \
-./lab_works/SpiFunctions.d 
+./lab_works/SpiFunctions.d \
+./lab_works/UsartFunctions.d 
 
 OBJS += \
 ./lab_works/AdDaFunctions.o \
 ./lab_works/I2cFinctions.o \
 ./lab_works/LabWorks.o \
-./lab_works/SpiFunctions.o 
+./lab_works/SpiFunctions.o \
+./lab_works/UsartFunctions.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -30,7 +33,7 @@ lab_works/%.o lab_works/%.su: ../lab_works/%.c lab_works/subdir.mk
 clean: clean-lab_works
 
 clean-lab_works:
-	-$(RM) ./lab_works/AdDaFunctions.d ./lab_works/AdDaFunctions.o ./lab_works/AdDaFunctions.su ./lab_works/I2cFinctions.d ./lab_works/I2cFinctions.o ./lab_works/I2cFinctions.su ./lab_works/LabWorks.d ./lab_works/LabWorks.o ./lab_works/LabWorks.su ./lab_works/SpiFunctions.d ./lab_works/SpiFunctions.o ./lab_works/SpiFunctions.su
+	-$(RM) ./lab_works/AdDaFunctions.d ./lab_works/AdDaFunctions.o ./lab_works/AdDaFunctions.su ./lab_works/I2cFinctions.d ./lab_works/I2cFinctions.o ./lab_works/I2cFinctions.su ./lab_works/LabWorks.d ./lab_works/LabWorks.o ./lab_works/LabWorks.su ./lab_works/SpiFunctions.d ./lab_works/SpiFunctions.o ./lab_works/SpiFunctions.su ./lab_works/UsartFunctions.d ./lab_works/UsartFunctions.o ./lab_works/UsartFunctions.su
 
 .PHONY: clean-lab_works
 
