@@ -69,22 +69,6 @@ static void MX_TIM3_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
-{
-	if(huart->Instance == USART2)
-	{
-		SetUsartState(DONE);
-	}
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	if(huart->Instance == USART2)
-	{
-		IterateRxByteInBuffer(huart);
-	}
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -127,8 +111,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  SendStr_AfterReceive(&huart2);
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -25,6 +25,9 @@
 #include "mb.h"
 #include "mbport.h"
 
+static uint8_t ucRxBuffer;
+static uint8_t ucTxBuffer;
+
 /* ----------------------- static functions ---------------------------------*/
 static void prvvUARTTxReadyISR( void );
 static void prvvUARTRxISR( void );
@@ -36,12 +39,30 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
     /* If xRXEnable enable serial receive interrupts. If xTxENable enable
      * transmitter empty interrupts.
      */
+
+	if(xRxEnable)
+	{
+		HAL_UART_Receive_IT(&huart2, &ucRxBuffer, 1);
+	}
+	else
+	{
+		HAL_UART_AbortReceive_IT(&huart2);
+	}
+
+	if(xTxEnable)
+	{
+		HAL_UART_Transmit_IT(&huart2, &ucTxBuffer, 1);
+	}
+	else
+	{
+		HAL_UART_AbortTransmit_IT(&huart2);
+	}
 }
 
 BOOL
 xMBPortSerialInit( UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity, UCHAR ucStopBits )
 {
-    return FALSE;
+    return TRUE;
 }
 
 BOOL
@@ -50,6 +71,8 @@ xMBPortSerialPutByte( CHAR ucByte )
     /* Put a byte in the UARTs transmit buffer. This function is called
      * by the protocol stack if pxMBFrameCBTransmitterEmpty( ) has been
      * called. */
+	ucTxBuffer = ucByte;
+	HAL_UART_Transmit_IT(&huart2, &ucTxBuffer, 1);
     return TRUE;
 }
 
@@ -59,6 +82,8 @@ xMBPortSerialGetByte( CHAR * pucByte )
     /* Return the byte in the UARTs receive buffer. This function is called
      * by the protocol stack after pxMBFrameCBByteReceived( ) has been called.
      */
+	*pucByte = ucRxBuffer;
+	HAL_UART_Receive_IT(&huart2, &ucRxBuffer, 1);
     return TRUE;
 }
 
@@ -82,3 +107,20 @@ static void prvvUARTRxISR( void )
 {
     pxMBFrameCBByteReceived(  );
 }
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart->Instance == USART2)
+	{
+		pxMBFrameCBByteReceived();
+	}
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart->Instance == USART2)
+	{
+		pxMBFrameCBTransmitterEmpty();
+	}
+}
+

@@ -26,6 +26,9 @@
 #include "mb.h"
 #include "mbport.h"
 
+volatile uint16_t timerPeriod = 0;
+volatile uint16_t timerCounter = 0;
+
 /* ----------------------- static functions ---------------------------------*/
 static void prvvTIMERExpiredISR( void );
 
@@ -33,7 +36,8 @@ static void prvvTIMERExpiredISR( void );
 BOOL
 xMBPortTimersInit( USHORT usTim1Timerout50us )
 {
-    return FALSE;
+	timerPeriod = usTim1Timerout50us;
+    return TRUE;
 }
 
 
@@ -41,12 +45,15 @@ inline void
 vMBPortTimersEnable(  )
 {
     /* Enable the timer with the timeout passed to xMBPortTimersInit( ) */
+	timerCounter = 0;
+	HAL_TIM_Base_Start_IT(&htim3);
 }
 
 inline void
 vMBPortTimersDisable(  )
 {
     /* Disable any pending timers. */
+	HAL_TIM_Base_Stop_IT(&htim3);
 }
 
 /* Create an ISR which is called whenever the timer has expired. This function
@@ -58,3 +65,15 @@ static void prvvTIMERExpiredISR( void )
     ( void )pxMBPortCBTimerExpired(  );
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if(htim->Instance == TIM3)
+	{
+		timerCounter++;
+
+		if(timerCounter == timerPeriod)
+		{
+			prvvTIMERExpiredISR();
+		}
+	}
+}

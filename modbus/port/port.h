@@ -34,6 +34,9 @@
 #define ENTER_CRITICAL_SECTION( )   __disable_irq()
 #define EXIT_CRITICAL_SECTION( )    __enable_irq()
 
+extern TIM_HandleTypeDef htim3;
+extern UART_HandleTypeDef huart2;
+
 typedef uint8_t BOOL;
 
 typedef unsigned char UCHAR;
