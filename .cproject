@@ -47,6 +47,12 @@
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../simple_math"/>
 									<listOptionValue builtIn="false" value="../lab_works"/>
+									<listOptionValue builtIn="false" value="../modbus/ascii"/>
+									<listOptionValue builtIn="false" value="../modbus/functions"/>
+									<listOptionValue builtIn="false" value="../modbus/include"/>
+									<listOptionValue builtIn="false" value="../modbus/rtu"/>
+									<listOptionValue builtIn="false" value="../modbus/port"/>
+									<listOptionValue builtIn="false" value="../modbus/tcp"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.738930593" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -86,11 +92,12 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="lab_works"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Debug/lab_works"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="simple_math"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Debug/lab_works"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="lab_works"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="modbus"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="simple_math"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
