@@ -22,6 +22,8 @@
 #ifndef _PORT_H
 #define _PORT_H
 
+#include "main.h"
+
 #include <assert.h>
 #include <inttypes.h>
 
