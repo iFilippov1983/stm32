@@ -42,6 +42,7 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
 
 	if(xRxEnable)
 	{
+		HAL_GPIO_WritePin(UART_DE_GPIO_Port, UART_DE_Pin, GPIO_PIN_RESET);
 		HAL_UART_Receive_IT(&huart2, &ucRxBuffer, 1);
 	}
 	else
@@ -51,7 +52,8 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
 
 	if(xTxEnable)
 	{
-		HAL_UART_Transmit_IT(&huart2, &ucTxBuffer, 1);
+		HAL_GPIO_WritePin(UART_DE_GPIO_Port, UART_DE_Pin, GPIO_PIN_SET);
+		pxMBFrameCBTransmitterEmpty(  );
 	}
 	else
 	{

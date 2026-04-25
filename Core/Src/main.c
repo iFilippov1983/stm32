@@ -41,6 +41,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+#define SLAVE_ADDRESS 		0x01
+
+#define REG_HOLDING_START	1
+#define REG_HOLDING_NREGS	20
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -53,7 +58,13 @@ TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart2;
 
+eMBErrorCode estatus;
+
 /* USER CODE BEGIN PV */
+
+static USHORT usRegHoldingBuf[REG_HOLDING_NREGS];
+
+ULONG usBaudRate = 19200;
 
 /* USER CODE END PV */
 
@@ -68,6 +79,117 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void InitializeModbus()
+{
+	estatus = eMBInit(MB_RTU, SLAVE_ADDRESS, 0, usBaudRate, MB_PAR_NONE, 1);
+
+	if(estatus == MB_ENOERR)
+	{
+		estatus = eMBEnable();
+	}
+	else
+	{
+		while(1);
+	}
+}
+
+void InitializeBuffer()
+{
+	for(int i = 0; i < REG_HOLDING_NREGS; i++)
+	{
+		switch (i)
+		{
+			case 4:
+				usRegHoldingBuf[i] = 1773;
+				break;
+			case 9:
+				usRegHoldingBuf[i] = 995;
+				break;
+			case 14:
+				usRegHoldingBuf[i] = 3981;
+				break;
+			case 19:
+				usRegHoldingBuf[i] = 451;
+				break;
+			default:
+				usRegHoldingBuf[i] = 0;
+				break;
+		}
+	}
+}
+
+void HandleModbus()
+{
+	eMBPoll();
+
+	usRegHoldingBuf[0] = (USHORT)(HAL_GetTick() & 0x0000FFFF);
+	usRegHoldingBuf[1]++;
+
+	HAL_Delay(1);
+}
+
+
+eMBErrorCode eMBRegHoldingCB(UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegisterMode eMode)
+{
+	eMBErrorCode eStatus = MB_ENOERR;
+	int iRegIndex;
+
+	//Modbus фдресация начинается с 1, а элементы в массиве с 0. Вычитаем 1 из адреса
+	usAddress--;
+
+	//Проверяем, что запрошенный адрес находится в нашем диапазоне
+	if((usAddress >= 0) && (usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS))
+	{
+		iRegIndex = (int)usAddress;
+
+		switch(eMode)
+		{
+		//Мастер ЧИТАЕТ
+		case MB_REG_READ:
+			while(usNRegs > 0)
+			{
+				*pucRegBuffer++ = (UCHAR)(usRegHoldingBuf[iRegIndex] >> 8);
+				*pucRegBuffer++ = (UCHAR)(usRegHoldingBuf[iRegIndex] & 0xFF);
+				iRegIndex++;
+				usNRegs--;
+			}
+			break;
+
+		//Мастер ЗАПИСЫВАЕТ
+		case MB_REG_WRITE:
+			while(usNRegs > 0)
+			{
+				usRegHoldingBuf[iRegIndex] = (USHORT)(*pucRegBuffer++ << 8);
+				usRegHoldingBuf[iRegIndex] |= (USHORT)(*pucRegBuffer++);
+				iRegIndex++;
+				usNRegs--;
+			}
+			break;
+		}
+	}
+	else
+	{
+		eStatus = MB_ENOREG;//Ошибка, такого регистра нет
+	}
+
+	return eStatus;
+}
+
+eMBErrorCode eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
+{
+	return MB_ENOERR;
+}
+
+eMBErrorCode eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils, eMBRegisterMode eMode )
+{
+	return MB_ENOERR;
+}
+
+eMBErrorCode eMBRegDiscreteCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNDiscrete )
+{
+	return MB_ENOERR;
+}
 
 /* USER CODE END 0 */
 
@@ -103,7 +225,8 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  ReseiveStr_ByByte(&huart2);
+  InitializeModbus();
+  InitializeBuffer();
 
   /* USER CODE END 2 */
 
@@ -111,6 +234,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  HandleModbus();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -217,7 +341,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 19200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -248,11 +372,21 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(UART_DE_GPIO_Port, UART_DE_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : UART_DE_Pin */
+  GPIO_InitStruct.Pin = UART_DE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(UART_DE_GPIO_Port, &GPIO_InitStruct);
 
 }
 
