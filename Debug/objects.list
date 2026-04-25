@@ -22,7 +22,6 @@
 "./lab_works/I2cFinctions.o"
 "./lab_works/LabWorks.o"
 "./lab_works/SpiFunctions.o"
-"./lab_works/UsartFunctions.o"
 "./modbus/ascii/mbascii.o"
 "./modbus/functions/mbfunccoils.o"
 "./modbus/functions/mbfuncdiag.o"
