@@ -125,8 +125,6 @@ void HandleModbus()
 
 	usRegHoldingBuf[0] = (USHORT)(HAL_GetTick() & 0x0000FFFF);
 	usRegHoldingBuf[1]++;
-
-	HAL_Delay(1);
 }
 
 
