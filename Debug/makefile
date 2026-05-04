@@ -83,8 +83,8 @@ all: main-build
 main-build: nucleo_f103rb_cpp.elf secondary-outputs
 
 # Tool invocations
-nucleo_f103rb_cpp.elf nucleo_f103rb_cpp.map: $(OBJS) $(USER_OBJS) D:\dev\ST\workspace_1.10.1\nucleo_f103rb_cpp\STM32F103RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "nucleo_f103rb_cpp.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"D:\dev\ST\workspace_1.10.1\nucleo_f103rb_cpp\STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="nucleo_f103rb_cpp.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+nucleo_f103rb_cpp.elf nucleo_f103rb_cpp.map: $(OBJS) $(USER_OBJS) C:\dev\ST\workspace_1.10.1\nucleo_f103rb_cpp\STM32F103RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-g++ -o "nucleo_f103rb_cpp.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\dev\ST\workspace_1.10.1\nucleo_f103rb_cpp\STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="nucleo_f103rb_cpp.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
